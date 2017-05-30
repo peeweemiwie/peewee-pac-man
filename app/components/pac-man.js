@@ -34,12 +34,12 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     ctx.clearRect(0, 0, this.get('screenPixelWidth'), this.get('screenPixelHeight'));
   },
 
-  drawCircle(x, y, radiusDivisor, color){
+  drawCircle(x, y, radiusDivisor, color, direction){
     let ctx = this.get('ctx');
     let squareSize = this.get('squareSize');
 
-    let pixelX = (x+1/2) * squareSize;
-    let pixelY = (y+1/2) * squareSize;
+    let pixelX = (x + 1/2 + this.offsetFor('x', direction)) * squareSize;
+    let pixelY = (y + 1/2 + this.offsetFor('y', direction)) * squareSize;
 
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -48,18 +48,23 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     ctx.fill();
   },
 
+  offsetFor(coordinate, direction) {
+    let frameRatio = this.get('frameCycle') / this.get('framesPerMovement');
+    return this.get(`directions.${direction}.${coordinate}`) * frameRatio;
+  },
+
   drawPac(){
     let x = this.get('x');
     let y = this.get('y');
     let radiusDivisor = 2;
     let color = '#f97f7f';
-    this.drawCircle(x, y, radiusDivisor, color);
+    this.drawCircle(x, y, radiusDivisor, color, this.get('direction'));
   },
 
   drawPellet(x, y) {
     let radiusDivisor = 6;
     let color = '#4cdae2';
-    this.drawCircle(x, y, radiusDivisor, color);
+    this.drawCircle(x, y, radiusDivisor, color, 'stopped');
   },
 
   didInsertElement(){
@@ -69,22 +74,23 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     this.drawPac();
   },
 
-  movePacMan(direction, amount){
-    this.incrementProperty(direction, amount);
+  isMoving: false,
+  direction: 'stopped',
+  movePacMan(direction){
+    if(this.get('isMoving') || this.pathBlockedInDirection(direction)){
 
-    // if(this.collidedWithBorder()) {
-    //   this.decrementProperty(direction, amount);
-    // }
-
-    if(this.collidedWithBorder() || this.collidedWithWall()){
-      this.decrementProperty(direction, amount)
+    } else {
+      this.set('direction', direction);
+      this.set('isMoving', true);
+      this.movementLoop();
     }
+    // this.clearScreen();
+    // this.drawGrid();
+    // this.drawPac();
+  },
 
-    this.processAnyPellets();
-
-    this.clearScreen();
-    this.drawGrid();
-    this.drawPac();
+  nextCoordinate(coordinate, direction){
+    return this.get(coordinate) + this.get(`directions.${direction}.${coordinate}`);
   },
 
   processAnyPellets(){
@@ -125,29 +131,63 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     return grid[y][x] == 1
   },
 
+  directions: {
+    'up': {x: 0, y: -1},
+    'down': {x: 0, y: 1},
+    'left': {x: -1, y: 0},
+    'right': {x: 1, y: 0},
+    'stopped': {x: 0, y: 0}
+  },
+
   keyboardShortcuts: {
-    up(){
-      this.movePacMan('y', -1);
-    },
-    down(){
-      this.movePacMan('y', 1);
-    },
-    left(){
-      this.movePacMan('x', -1);
-    },
-    right(){
-      this.movePacMan('x', 1);
-    },
+    up(){this.movePacMan('up');},
+    down(){this.movePacMan('down');},
+    left(){this.movePacMan('left',);},
+    right(){this.movePacMan('right');},
   },
 
   grid: [
-    [2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,1],
     [2,1,2,1,2,2,2,1],
     [2,2,1,2,2,2,2,1],
     [2,2,2,2,2,2,2,1],
     [2,2,2,2,2,2,2,1],
     [1,2,2,2,2,2,2,1],
   ],
+
+  pathBlockedInDirection(direction){
+    let cellTypeInDirection = this.cellTypeInDirection(direction);
+    return Ember.isEmpty(cellTypeInDirection) || cellTypeInDirection == 1;
+  },
+
+  cellTypeInDirection(direction) {
+    let nextX = this.nextCoordinate('x', direction);
+    let nextY = this.nextCoordinate('y', direction);
+
+    return this.get(`grid.${nextY}.${nextX}`);
+  },
+
+  frameCycle: 1,
+  framesPerMovement: 30,
+  movementLoop(){
+    if(this.get('frameCycle') == this.get('framesPerMovement')){
+      let direction = this.get('direction');
+      this.set('x', this.nextCoordinate('x', direction));
+      this.set('y', this.nextCoordinate('y', direction));
+
+      this.set('isMoving', false);
+      this.set('frameCycle', 1);
+
+      this.processAnyPellets();
+    } else {
+      this.incrementProperty('frameCycle');
+      Ember.run.later(this, this.movementLoop, 1000/60);
+    }
+
+    this.clearScreen();
+    this.drawGrid();
+    this.drawPac();
+  },
 
   drawWall(x, y){
     let ctx = this.get('ctx');
