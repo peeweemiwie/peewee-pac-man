@@ -7,7 +7,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
   x: 1,
   y: 2,
   squareSize: 40,
-  ctx: Ember.computed(function(){
+  ctx: Ember.computed(()=>{
     let canvas = document.getElementById("myCanvas");
     let ctx = canvas.getContext("2d");
     return ctx;
@@ -62,7 +62,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     this.drawCircle(x, y, radiusDivisor, color);
   },
 
-  didInsertElement: function(){
+  didInsertElement(){
     this.drawWall();
     this.drawGrid();
     this.drawPellet();
@@ -87,7 +87,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     this.drawPac();
   },
 
-  processAnyPellets: function(){
+  processAnyPellets(){
     let x = this.get('x');
     let y = this.get('y');
     let grid = this.get('grid');
@@ -103,7 +103,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     }
   },
 
-  collidedWithBorder: function(){
+  collidedWithBorder(){
     let x = this.get('x');
     let y = this.get('y');
     let screenHeight = this.get('screenHeight');
@@ -117,7 +117,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     return pacOutOfBounds;
   },
 
-  collidedWithWall: function(){
+  collidedWithWall(){
     let x = this.get('x');
     let y = this.get('y');
     let grid = this.get('grid');
@@ -126,16 +126,16 @@ export default Ember.Component.extend(KeyboardShortcuts, {
   },
 
   keyboardShortcuts: {
-    up: function(){
+    up(){
       this.movePacMan('y', -1);
     },
-    down: function(){
+    down(){
       this.movePacMan('y', 1);
     },
-    left: function(){
+    left(){
       this.movePacMan('x', -1);
     },
-    right: function(){
+    right(){
       this.movePacMan('x', 1);
     },
   },
@@ -149,7 +149,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     [1,2,2,2,2,2,2,1],
   ],
 
-  drawWall: function(x, y){
+  drawWall(x, y){
     let ctx = this.get('ctx');
     let squareSize = this.get('squareSize');
 
@@ -161,7 +161,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
       squareSize)
   },
 
-  drawGrid: function(){
+  drawGrid(){
     let grid = this.get('grid');
     grid.forEach((row, rowIndex) => {
       row.forEach((cell, columnIndex) => {
@@ -175,7 +175,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     })
   },
 
-  levelComplete: function(){
+  levelComplete(){
     let hasPelletsLeft = false;
     let grid = this.get('grid');
 
@@ -189,7 +189,7 @@ export default Ember.Component.extend(KeyboardShortcuts, {
     return !hasPelletsLeft;
   },
 
-  restartLevel: function(){
+  restartLevel(){
     this.set('x', 0);
     this.set('y', 0);
 
