@@ -139,10 +139,18 @@ export default Ember.Component.extend(KeyboardShortcuts, {
 
   intent: 'down',
   keyboardShortcuts: {
-    up(){this.set('intent', 'up');},
-    down(){this.set('intent', 'down');},
-    left(){this.set('intent', 'left');},
-    right(){this.set('intent', 'right');},
+    up(){
+      this.set('intent', 'up');
+    },
+    down(){
+      this.set('intent', 'down');
+    },
+    left(){
+      this.set('intent', 'left');
+    },
+    right(){
+      this.set('intent', 'right');
+    },
   },
 
   grid: [
